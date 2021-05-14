@@ -1,20 +1,14 @@
-import { SVG } from '@svgdotjs/svg.js';
-import {MyToolkit} from './mytoolkit.js';
-
-// Implement a MyToolkit Button
-var btn = new MyToolkit.Button;
-btn.move(100,100);
-btn.onclick(function(e){
-	console.log(e);
-});
+import {MyToolkit} from './toolkit.js';
+import {SVG} from './svg.min.js';
 
 
-// SVG.on(document, 'DOMContentLoaded', function() {
-// 	var btn = new Button;
-// 	btn.onclick(function(event) {
-// 		console.log('clicked')
-// 	})
-// })
+SVG.on(document, 'DOMContentLoaded', function() {
+	var btn = new MyToolkit.Button;
+	btn.move(100,100);
+	btn.onclick(function(e){
+		console.log(e);
+	});
+})
 
 
 // var draw = SVG().addTo('#someId').size('100%', '100%')
