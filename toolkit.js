@@ -400,8 +400,8 @@ var MyToolkit = (function() {
         // Visually support a caret | that informs the user about the position of the cursor. 
         //      The caret should only be visually present when the widget has hover focus.
         // Expose a custom property to get the text entered by the user.
-        // Expose an event handler that notifies consuming code when the text has changed.
-        // Expose an event handler that notifies consuming code when the widget state has changed.
+        // Expose an event handler that notifies consuming code when the text has changed. [???]
+        // Expose an event handler that notifies consuming code when the widget state has changed. [done]
 
         var textbox = draw.group();
         var rect = textbox.rect(200, 30).fill('white').stroke('black');
@@ -467,9 +467,6 @@ var MyToolkit = (function() {
             defaultState = 'up'
             transition()
         })
-        // rect.keypress(function(event){
-        //     console.log(event);
-        // })
 
         function transition(){
             if(stateEvent != null)
