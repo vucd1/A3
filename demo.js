@@ -23,20 +23,16 @@ SVG.on(document, 'DOMContentLoaded', function() {
 	var draw = SVG().addTo('body').size('100%','100%');
 	var frame = draw.group();
 	frame.rect(1200,800).stroke('gray').fill('white');
-	// frame.click(function(event){
-	// 	console.log('frame')
-	// 	console.log(event)
-	// })
 
 	// create button
 	var btn = new MyToolkit.Button(draw);
 	btn.move(20, 20);
-	btn.setText('button');
-	// btn.setText('really longggggggg text')
+	btn.text = 'oh!'
 	btn.onclick(function(event){
 		console.log(event)
 		console.log(event.target)
 	})
+
 	btn.stateChanged(function(event){
 		console.log('state changed to: ' + event)
 	})
@@ -51,7 +47,7 @@ SVG.on(document, 'DOMContentLoaded', function() {
 	checkbox.stateChanged(function(event){
 		console.log('state changed to: ' + event)
 	})
-	checkbox.setText('hey there!');
+	checkbox.text = 'hey there!';
 
 
 
@@ -90,7 +86,7 @@ SVG.on(document, 'DOMContentLoaded', function() {
 	progress.move(20, 400);
 	// progress.progress(80);
 	progress.size(200, 10);
-	progress.attr.progress = 40;
+	// progress.attr.progress = 40;
 	// console.log(progress.attr.progress)
 	// setInterval(inc, 1000);
 	// var p = 0;

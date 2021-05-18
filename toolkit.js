@@ -2,7 +2,7 @@ import {SVG} from './svg.min.js';
 import {Colors} from './colors.js';
 
 var MyToolkit = (function() {
-    var Button = function(draw){
+    var Button = class{
         // TO-DO:
         // - consider longer text (elongating button or adding '...')
 
@@ -13,149 +13,291 @@ var MyToolkit = (function() {
         // Expose an event handler that notifies consuming code when the widget state has changed
 
         //create button component
-        var width = 100;
-        var height = 40;
-        var button = draw.group();
-        var rect = button.rect(width, height)
-            .fill({color: Colors.lightblue})
-            .radius(10);
-        var text = button.text('Button')
-            .font({family: 'Roboto',
-                    size: 14,
-                    anchor: 'middle'})
-            .move(width/4, height/4);
+        constructor(draw, w=100, h=40){
+            this.draw = draw;
+            this.width = w;
+            this.height = h;
+            this.button = draw.group();
+            this.input = 'Button'
+            this.rect = this.button.rect(this.width, this.height)
+                .fill({color: Colors.lightblue})
+                .radius(10);
+            this.buttonText = this.button.text(this.input)
+                .font({family: 'Roboto',
+                        size: 14,
+                        anchor: 'middle'})
+                .move(this.width/4, this.height/4);
 
-        // define widget states
-        var clickEvent = null
-        var stateEvent = null
-        var defaultState = 'idle'
-
-        // action states
-        rect.mouseover(function(){
-            this.fill({ color: Colors.blue})
-            defaultState = 'hover'
-            transition()
-        })
-        rect.mouseout(function(){
-            this.fill({ color: Colors.lightblue})
-            defaultState = 'idle'
-            transition()
-        })
-        rect.mousedown(function(){
-            this.fill({ color: Colors.darkblue})
-            defaultState = 'pressed'
-            transition()
-        })
-        rect.mouseup(function(event){
-            this.fill({ color: Colors.lightblue})
-            if(defaultState == 'pressed'){
-                if(clickEvent != null)
-                    clickEvent(event)
-            }
-            defaultState = 'up'
-            transition()
-        })
-
-        function transition(){
-            if(stateEvent != null)
-                stateEvent(defaultState)
+            // define widget states
+            this.clickEvent = null
+            this.stateEvent = null
+            this.defaultState = 'idle'
+            this.registerEvent(this.button);
         }
 
-        return {
-            move: function(x, y) {
-                button.move(x, y);
-            },
-            onclick: function(eventHandler){
-                clickEvent = eventHandler
-            },
-            stateChanged: function(eventHandler){
-                stateEvent = eventHandler
-            },
-            src: function() {
-                return button;
-            },
-            setText: function(msg) {
-                text.clear();
-                text.text(msg);
+        registerEvent(obj){
+            obj.click((event) => {
+            })
+            obj.mouseover((event) => {
+                this.rect.fill({ color: Colors.blue})
+                this.defaultState = 'hover'
+                this.transition()
+            })
+            obj.mouseout((event) => {
+                this.rect.fill({ color: Colors.lightblue})
+                this.defaultState = 'idle'
+                this.transition()
+            })
+            obj.mousedown((event) => {
+                this.rect.fill({ color: Colors.darkblue})
+                this.defaultState = 'pressed'
+                this.transition()
+            })
+            obj.mouseup((event) => {
+                this.rect.fill({ color: Colors.lightblue})
+                if(this.defaultState == 'pressed'){
+                    if(this.clickEvent != null)
+                        this.clickEvent(event)
+                }
+                this.defaultState = 'up'
+                this.transition()
+            })
+        }
+        transition(){
+            if(this.stateEvent != null)
+                this.stateEvent(this.defaultState)
+        }
+
+        handleEvent(e) {
+            switch(e.type) {
+                case "click":
+                    this.clickEvent(e);
+                break;
+                case "mouseover":
+                    this.mouseOverEvent(e);
+                break;
+                case "mouseout":
+                    this.mouseOutEvent(e);
+                break;
+                case "mousedown":
+                    this.mouseDownEvent(e);
+                break;
+                case "mouseup":
+                    this.mouseUpEvent(e);
+                break;
             }
+        }
+
+        update(){
+            if(this.buttonText != null){
+                this.buttonText.text(this.input)
+            }
+        }
+
+
+        move(x, y) {
+            this.button.move(x, y);
+        }
+        onclick(eventHandler) {
+            this.clickEvent = eventHandler
+        }
+        stateChanged(eventHandler) {
+            // console.log(eventHandler)
+            this.stateEvent = eventHandler
+        }
+        src() {
+            return this.button;
+        }
+        set text(text) {
+            this.input = text;
+            this.update();
         }
     }
 
-    var CheckBox = function(draw){
+    var CheckBox = class{
         // REQUIREMENTS:
         // Visually support checked and unchecked states
         // Expose a custom label property to set the text that appears to the RIGHT of the check box
         // Expose an event handler that notifies consuming code when the checked state has changed
         // Expose an event handler that notifies consuming code when the widget state has changed
 
-        // create checkbox widget
-        var width = 20;
-        var height = 20;
-        var checkbox  = draw.group();
-        var rect = checkbox.rect(width, height).fill({color: 'white'}).stroke({ color: 'gray', width: 1});
-        var text = checkbox.text('Checkbox').font({family: 'Roboto', size: 14}).move(width*1.5, 0);
+        constructor(draw){
+            this.draw = draw;
+            this.width = 20;
+            this.height = 20;
+            this.checkbox = draw.group();
+            this.input = 'Checkbox'
+            this.rect = this.checkbox.rect(this.width, this.height)
+                .fill({color: 'white'})
+                .stroke({ color: 'gray', width: 1});
+            this.checkBoxText = this.checkbox.text('Checkbox')
+                .font({family: 'Roboto', size: 14})
+                .move(this.width*1.5, 0);
 
-        // define state vars
-        var checkedEvent = null;
-        var checkedState = 'unchecked';
-        var stateEvent = null;
-        var defaultState = 'idle';
 
-        // action states
-        rect.mouseover(function(){
-            defaultState = 'hover'
-            transition()
-        })
-        rect.mouseout(function(){
-            defaultState = 'idle'
-            transition()
-        })
-        rect.mousedown(function(){
-            defaultState = 'pressed'
-            transition()
-        })
-        rect.mouseup(function(event){
-            if(defaultState == 'pressed'){
-                if(checkedEvent != null)
-                checkedEvent(event);
-                    if(checkedState == 'unchecked'){
-                        checkedState = 'checked'
-                        this.fill({color: Colors.blue})
-                        this.stroke({color: Colors.blue})
-                    }
-                    else {
-                        checkedState = 'unchecked'
-                        this.fill({color: Colors.white})
-                        this.stroke({color: Colors.black})
-                    }
-            }
-            defaultState = 'up'
-            transition()
-        })
-
-        function transition(){
-            if(stateEvent != null)
-                stateEvent(defaultState)
+            // define widget states
+            this.checkedEvent = null
+            this.checkedState = 'unchecked'
+            this.stateEvent = null
+            this.defaultState = 'idle'
+            this.registerEvent(this.checkbox)
         }
 
-        return {
-            move: function(x, y) {
-                checkbox.move(x, y);
-            },
-            onclick: function(eventHandler){
-                checkedEvent = eventHandler
-            },
-            stateChanged: function(eventHandler){
-                stateEvent = eventHandler
-            },
-            src: function() {
-                return checkbox;
-            },
-            setText: function(msg) {
-                text.clear();
-                text.text(msg);
+        registerEvent(obj){
+            obj.click((event) => {
+            })
+            obj.mouseover((event) => {
+                this.defaultState = 'hover'
+                this.transition()
+            })
+            obj.mouseout((event) => {
+                this.defaultState = 'idle'
+                this.transition()
+            })
+            obj.mousedown((event) => {
+                this.defaultState = 'pressed'
+                this.transition()
+            })
+            obj.mouseup((event) => {
+                if(this.defaultState == 'pressed'){
+                    if(this.checkedEvent != null)
+                        this.checkedEvent(event);
+                        if(this.checkedState == 'unchecked'){
+                            this.checkedState = 'checked'
+                            this.rect.fill({color: Colors.blue})
+                            this.rect.stroke({color: Colors.blue})
+                        }
+                        else {
+                            this.checkedState = 'unchecked'
+                            this.rect.fill({color: Colors.white})
+                            this.rect.stroke({color: Colors.black})
+                        }
+                }
+                this.defaultState = 'up'
+                this.transition()
+            })
+        }
+
+        transition(){
+            if(this.stateEvent != null)
+                this.stateEvent(this.defaultState)
+        }
+
+        handleEvent(e) {
+            switch(e.type) {
+                case "click":
+                    this.clickEvent(e);
+                break;
+                case "mouseover":
+                    this.mouseOverEvent(e);
+                break;
+                case "mouseout":
+                    this.mouseOutEvent(e);
+                break;
+                case "mousedown":
+                    this.mouseDownEvent(e);
+                break;
+                case "mouseup":
+                    this.mouseUpEvent(e);
+                break;
             }
         }
+
+        update(){
+            if(this.checkBoxText != null){
+                this.checkBoxText.text(this.input)
+            }
+        }
+
+
+        move(x, y) {
+            this.checkbox.move(x, y);
+        }
+        onclick(eventHandler) {
+            this.clickEvent = eventHandler
+        }
+        stateChanged(eventHandler) {
+            // console.log(eventHandler)
+            this.stateEvent = eventHandler
+        }
+        src() {
+            return this.checkbox;
+        }
+        set text(text) {
+            this.input = text;
+            this.update();
+        }
+
+        // // create checkbox widget
+        // var width = 20;
+        // var height = 20;
+        // var checkbox  = draw.group();
+        // var rect = checkbox.rect(width, height).fill({color: 'white'}).stroke({ color: 'gray', width: 1});
+        // var text = checkbox.text('Checkbox').font({family: 'Roboto', size: 14}).move(width*1.5, 0);
+
+        // // define state vars
+        // var checkedEvent = null;
+        // var checkedState = 'unchecked';
+        // var stateEvent = null;
+        // var defaultState = 'idle';
+
+        // // action states
+        // rect.mouseover(function(){
+        //     defaultState = 'hover'
+        //     transition()
+        // })
+        // rect.mouseout(function(){
+        //     defaultState = 'idle'
+        //     transition()
+        // })
+        // rect.mousedown(function(){
+        //     defaultState = 'pressed'
+        //     transition()
+        // })
+        // rect.mouseup(function(event){
+        //     if(defaultState == 'pressed'){
+        //         if(checkedEvent != null)
+        //         checkedEvent(event);
+        //             if(checkedState == 'unchecked'){
+        //                 checkedState = 'checked'
+        //                 this.fill({color: Colors.blue})
+        //                 this.stroke({color: Colors.blue})
+        //             }
+        //             else {
+        //                 checkedState = 'unchecked'
+        //                 this.fill({color: Colors.white})
+        //                 this.stroke({color: Colors.black})
+        //             }
+        //     }
+        //     defaultState = 'up'
+        //     transition()
+        // })
+
+        // function transition(){
+        //     if(stateEvent != null)
+        //         stateEvent(defaultState)
+        // }
+
+        // return {
+        //     move: function(x, y) {
+        //         checkbox.move(x, y);
+        //     },
+        //     onclick: function(eventHandler){
+        //         checkedEvent = eventHandler
+        //     },
+        //     stateChanged: function(eventHandler){
+        //         stateEvent = eventHandler
+        //     },
+        //     src: function() {
+        //         return checkbox;
+        //     },
+        //     setText: function(msg) {
+        //         text.clear();
+        //         text.text(msg);
+        //     }
+        // }
+
+        
     }
 
     var RadioButton = function(draw, msg, isChecked, heightIncr=0){
@@ -557,8 +699,8 @@ var MyToolkit = (function() {
 
         // create progress bar
         var progressBar = draw.group();
-        var outterRect = progressBar.rect(attr.width, attr.height).fill('white').stroke('black');
-        var innerRect = progressBar.rect(attr.width, attr.height).fill('green');
+        var outterRect = progressBar.rect(width, height).fill('white').stroke('black');
+        var innerRect = progressBar.rect(width, height).fill('green');
 
 
         // define widget states
@@ -615,10 +757,10 @@ var MyToolkit = (function() {
             },
             size: function(w, h) {
                 if (w > 10) {
-                    attr.width = w
+                    // attr.width = w
                 }
                 if (h > 3) {
-                    attr.height = h;
+                    // attr.height = h;
                 }
             },
             setProgress: function(value){
