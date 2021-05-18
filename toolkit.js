@@ -15,17 +15,17 @@ var MyToolkit = (function() {
         //create button component
         var width = 100;
         var height = 40;
-
         var button = draw.group();
-        var rect = button.rect(width, height).fill({color: Colors.lightblue}).radius(10);
+        var rect = button.rect(width, height)
+            .fill({color: Colors.lightblue})
+            .radius(10);
         var text = button.text('Button')
             .font({family: 'Roboto',
                     size: 14,
                     anchor: 'middle'})
             .move(width/4, height/4);
 
-        // define states
-        // states: idle, hover, pressed, up (mouseup?)
+        // define widget states
         var clickEvent = null
         var stateEvent = null
         var defaultState = 'idle'
@@ -70,7 +70,6 @@ var MyToolkit = (function() {
             },
             stateChanged: function(eventHandler){
                 stateEvent = eventHandler
-                console.log(defaultState) // doesn't work??
             },
             src: function() {
                 return button;
@@ -104,26 +103,21 @@ var MyToolkit = (function() {
 
         // action states
         rect.mouseover(function(){
-            // this.fill({ color: 'white'})
             defaultState = 'hover'
             transition()
         })
         rect.mouseout(function(){
-            // this.fill({ color: 'white'})
             defaultState = 'idle'
             transition()
         })
         rect.mousedown(function(){
-            // this.fill({ color: Colors.blue})
-            // this.stroke({color: Colors.blue})
             defaultState = 'pressed'
             transition()
         })
         rect.mouseup(function(event){
-            // this.fill({ color: Colors.lightblue})
             if(defaultState == 'pressed'){
                 if(checkedEvent != null)
-                    checkedEvent(event)
+                checkedEvent(event);
                     if(checkedState == 'unchecked'){
                         checkedState = 'checked'
                         this.fill({color: Colors.blue})
@@ -134,7 +128,6 @@ var MyToolkit = (function() {
                         this.fill({color: Colors.white})
                         this.stroke({color: Colors.black})
                     }
-                    console.log('checkedState: ' + checkedState)
             }
             defaultState = 'up'
             transition()
@@ -154,8 +147,6 @@ var MyToolkit = (function() {
             },
             stateChanged: function(eventHandler){
                 stateEvent = eventHandler
-                console.log('defaultstate: ' + defaultState) // doesn't work??
-                
             },
             src: function() {
                 return checkbox;
@@ -167,7 +158,7 @@ var MyToolkit = (function() {
         }
     }
 
-    var RadioButton = function(draw, n = 2){
+    var RadioButton = function(draw, msg, isChecked, heightIncr=0){
          // REQUIREMENTS:
          // visually support checked and unchecked states [done]
          // support 2 to n numbers of buttons, where n is set 
@@ -181,55 +172,53 @@ var MyToolkit = (function() {
          // QUESTIONS:
          // - do i need to handle errors? n = 1
 
-        // attributes
+        // create radio button widget
         var width = 20;
         var height = 20;
-        // var radioCount = n; //default values in js???
-
-        // create checkbox widget
+        var whitespace = 3;
         var radioButton  = draw.group();
-        var circle = radioButton.circle(width, height).fill({color: 'white'}).stroke({ color: Colors.black, width: 1});
-        var text = radioButton.text('Radio Button 1').font({family: 'Roboto', size: 14}).move(width*1.5, 0);
+        var circle = radioButton.circle(width, height)
+            .fill({color: 'white'})
+            .stroke({ color: Colors.black, width: 1})
+            .move(whitespace, heightIncr+whitespace);
+        var text = radioButton.text(msg)
+            .font({family: 'Roboto', size: 14})
+            .move(width*1.5+whitespace, heightIncr+whitespace);
 
         // define state vars
-        var checkedEvent = null;
-        var checkedState = 'unchecked';
+        var clickEvent = null;
+        var checkedState = isChecked; // true if checked; false otherwise
         var stateEvent = null;
         var defaultState = 'idle';
 
         // action states
         circle.mouseover(function(){
-            // this.fill({ color: 'white'})
             defaultState = 'hover'
             transition()
         })
         circle.mouseout(function(){
-            // this.fill({ color: 'white'})
             defaultState = 'idle'
             transition()
         })
         circle.mousedown(function(){
-            // this.fill({ color: Colors.blue})
-            // this.stroke({color: Colors.blue})
             defaultState = 'pressed'
             transition()
         })
         circle.mouseup(function(event){
-            // this.fill({ color: Colors.lightblue})
             if(defaultState == 'pressed'){
-                if(checkedEvent != null)
-                    checkedEvent(event)
-                    if(checkedState == 'unchecked'){
-                        checkedState = 'checked'
+                if(clickEvent != null)
+                    clickEvent(event)
+                    checkedState = !checkedState;
+
+                    // modify appearance
+                    if(checkedState){
                         this.fill({color: Colors.blue})
                         this.stroke({color: Colors.blue})
                     }
                     else {
-                        checkedState = 'unchecked'
                         this.fill({color: Colors.white})
                         this.stroke({color: Colors.black})
                     }
-                    console.log('checkedState: ' + checkedState)
             }
             defaultState = 'up'
             transition()
@@ -248,9 +237,7 @@ var MyToolkit = (function() {
                 checkedEvent = eventHandler
             },
             stateChanged: function(eventHandler){
-                stateEvent = eventHandler
-                console.log('defaultstate: ' + defaultState) // doesn't work??
-                
+                stateEvent = eventHandler                
             },
             src: function() {
                 return radioButton;
@@ -259,8 +246,119 @@ var MyToolkit = (function() {
                 text.clear();
                 text.text(msg);
             },
-            setAmount: function(value){
+            getCheckedState: function() {
+                return checkedState;
+            }
+        }
+    }
 
+    var RadioButtons = function(draw, radioAttr){
+        // attributes
+        var frameWidth = 150;
+        var frameHeight = 30;
+        var heightIncr = 30;
+        var attributes = [...radioAttr]; //clone array
+        var activeButton = -1; // -1 if none selected or the value of the button (starting from 0)
+        var checkedEvent = null;
+        var stateEvent = null;
+        var defaultState = 'idle';
+
+        // create frame
+        var frame = draw.group();
+        var rect = frame.rect(frameWidth, frameHeight*radioAttr.length).fill({color: Colors.seafoam, opacity: 100});
+
+        // create a list of radio buttons
+        var radioButtonList = [];
+        for (var i = 0; i < attributes.length; i++){
+            var msg = attributes[i][0];
+            var isChecked = attributes[i][1];
+            var radioButton = new RadioButton(draw, msg, isChecked, heightIncr*i);
+            radioButtonList.push(radioButton);
+
+        }
+
+        // function: get a dict of position: checkedState(true or false)
+        function getCheckedStates(){
+            var states = {}; 
+            for (var i = 0; i < attributes.length; i++){
+                states[i] = attributes[i][1];
+            }
+            return states;
+        }
+
+        // action states
+        frame.mouseover(function(){
+            defaultState = 'hover'
+            transition()
+        })
+        frame.mouseout(function(){
+            defaultState = 'idle'
+            transition()
+        })
+        // change the state to 'pressed' when mouse down
+        frame.mousedown(function(){
+            defaultState = 'pressed'
+            transition();
+        })
+
+        // when the mouse is up, check if a radio button has been pressed
+        // if true, uncheck the previous button
+        // change activeButton var
+        // check new button
+        frame.mouseup(function(event){
+            console.log('mouseup');
+            // this.fill({ color: Colors.lightblue})
+            // if the radio group has been pressed...
+            if(defaultState == 'pressed'){
+                // if a radio button has been pressed...
+                // loop thru and check on click?????? how does onclick/check actually work??
+                var states = getCheckedStates();
+                // for (var i = 0; i < states.length; i++){
+                //     states[i]
+                // }
+                // if(checkedState == 'unchecked'){
+                //     checkedState = 'checked'
+                //     this.fill({color: Colors.blue})
+                //     this.stroke({color: Colors.blue})
+                // }
+                // else {
+                //     checkedState = 'unchecked'
+                //     this.fill({color: Colors.white})
+                //     this.stroke({color: Colors.black})
+                // }
+            }
+            defaultState = 'up'
+            transition()
+        })
+
+        function transition(){
+            if(stateEvent != null)
+                stateEvent(defaultState)
+        }
+
+        return {
+            move: function(x, y) {
+                frame.move(x, y);
+                for (var i = 0; i < radioButtonList.length; i++){
+                    radioButtonList[i].move(x, y + (heightIncr*i));
+                }
+            },
+            onclick: function(){
+                // checkedEvent = eventHandler;
+                // for (var rb in radioButtonList){
+                //     console.log(rb.getCheckedState);
+                //     rb.onclick;
+                // }
+            },
+            stateChanged: function(eventHandler){
+                stateEvent = eventHandler;
+            },
+            src: function() {
+                return frame;
+            },
+            setText: function(buttonNumber, msg) {
+                //takes a number from 1 to n
+                radioButtonList[buttonNumber-1].setText(msg);
             }
         }
     }
@@ -379,7 +477,7 @@ var MyToolkit = (function() {
         }
     }
 
-return {Button, CheckBox, RadioButton, TextBox, ScrollBar, ProgressBar, ToggleSwitch}
+return {Button, CheckBox, RadioButtons, TextBox, ScrollBar, ProgressBar, ToggleSwitch}
 
 
 }());
