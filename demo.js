@@ -69,10 +69,42 @@ SVG.on(document, 'DOMContentLoaded', function() {
 
 
 
-	// create text
+	// create textbox
 	var textbox = new MyToolkit.TextBox(draw);
 	textbox.move(20, 300);
 	textbox.stateChanged(function(event){
+		console.log('state changed to: ' + event)
+	})
+
+
+	// create scroll bar
+	var scroll = new MyToolkit.ScrollBar(draw);
+	scroll.move(20, 300);
+	// scroll.stateChanged(function(event){
+	// 	console.log('state changed to: ' + event)
+	// })
+
+
+	// create progress bar
+	var progress = new MyToolkit.ProgressBar(draw);
+	progress.move(20, 400);
+	// progress.progress(80);
+	progress.size(200, 10);
+	progress.attr.progress = 40;
+	// console.log(progress.attr.progress)
+	// setInterval(inc, 1000);
+	// var p = 0;
+	// function inc(){
+	// 	p += 20
+	// 	if (p > 200){
+	// 		p = 0;
+	// 		progress.setProgress(p); 
+	// 	}
+	// 	else {
+	// 		progress.setProgress(p);
+	// 	}
+	// }
+	progress.stateChanged(function(event){
 		console.log('state changed to: ' + event)
 	})
 
@@ -84,5 +116,7 @@ SVG.on(document, 'DOMContentLoaded', function() {
 	frame.add(checkbox.src);
 	frame.add(radioButtons.src);
 	frame.add(textbox.src);
+	frame.add(scroll.src);
+	frame.add(progress.src);
 	// frame.move(10, 10);
 })

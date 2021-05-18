@@ -283,7 +283,7 @@ var MyToolkit = (function() {
         }
      
         function bindClick(i) {
-            console.log("you clicked region number " + i);
+            // console.log("you clicked region number " + i);
         }
 
         function bindMouseOver(i){
@@ -395,6 +395,7 @@ var MyToolkit = (function() {
     var TextBox = function(draw){
         // TO DO:
         // - consider caret with whitespace at the end of text. does not consider it (spaces)
+        // - caret should only be visible on hover focus
 
         // REQUIREMENTS:
         // Visually support a caret | that informs the user about the position of the cursor. 
@@ -405,14 +406,14 @@ var MyToolkit = (function() {
 
         var textbox = draw.group();
         var rect = textbox.rect(200, 30).fill('white').stroke('black');
-        var text = textbox.text('hello').move(5, 6)
+        var text = textbox.text('').move(5, 0)
         var caret = textbox.rect(2, 16).move(text.length()+6, 7)
         var runner = caret.animate().width(0)
         runner.loop(1000, 1, 0)
     
         SVG.on(window, 'keyup', (event) => {
             // text can go to the end and then stop
-            console.log(event)
+            // console.log(event)
             var key = event.key
             if (key == 'Backspace'){
                 var msg = text.text()
@@ -494,7 +495,7 @@ var MyToolkit = (function() {
         }
     }
 
-    var ScrollBar = function(){
+    var ScrollBar = function(draw){
         var draw = SVG().addTo('body').size('100%','100%');
         var rect = draw.rect(100,50).fill('purple')
         var clickEvent = null
@@ -523,32 +524,107 @@ var MyToolkit = (function() {
         }
     }
 
-    var ProgressBar = function(){
-        var draw = SVG().addTo('body').size('100%','100%');
-        var rect = draw.rect(100,50).fill('purple')
-        var clickEvent = null
+    var ProgressBar = function(draw, w=200, h=15, i=25){
+        // REQUIREMENTS:
+        // Expose a custom property to set the width of the progress bar.
+        // Expose a custom property to set the increment value of the progress bar.
+        // Expose a custom property to get the increment value of the progress bar.
+        // Expose a custom method to increment the value of the progress bar. The method should support an arbitrary numerical value from 0-100.
+        //      if 0, progress bar should be empty... and so on
+        //      "as long as your code provides a way for calling code to change the value
+        //      (or progress) of the widget"
+        // Expose an event handler that notifies consuming code when the progress bar has incremented.
+        // Expose an event handler that notifies consuming code when the widget state has changed.
 
-        rect.mouseover(function(){
-            this.fill({ color: 'blue'})
+        //attributes
+        var width = w;
+        var height = h;
+
+        // var attr = {
+        //     width: w,
+        //     height: h,
+        //     // custom property to set the increment value of the progress bar
+        //     set progress(value) {
+        //         console.log(value)
+        //         width = value
+        //         innerRect.width(value)
+        //     },
+        //     // custom property to get the increment value of the progress bar
+        //     get progress() {
+        //         return width
+        //     }
+        // }
+
+        // create progress bar
+        var progressBar = draw.group();
+        var outterRect = progressBar.rect(attr.width, attr.height).fill('white').stroke('black');
+        var innerRect = progressBar.rect(attr.width, attr.height).fill('green');
+
+
+        // define widget states
+        var clickEvent = null
+        var stateEvent = null
+        var defaultState = 'idle'
+
+        // action states
+        outterRect.mouseover(function(){
+            // if the user just clicked and is still hovering, show the caret
+            // if(defaultState = 'up'){
+            //     caret.show();
+            // }
+            defaultState = 'hover'
+            transition()
         })
-        rect.mouseout(function(){
-            this.fill({ color: 'red'})
+        outterRect.mouseout(function(){
+            defaultState = 'idle'
+            transition()
         })
-        rect.mouseup(function(){
-            this.fill({ color: 'red'})
+        outterRect.mousedown(function(){
+            defaultState = 'pressed'
+            transition()
         })
-        rect.click(function(event){
-            this.fill({ color: 'pink'})
-            if(clickEvent != null)
-                clickEvent(event)
+        outterRect.mouseup(function(event){
+            if(defaultState == 'pressed'){
+                if(clickEvent != null)
+                    clickEvent(event)
+            }
+            defaultState = 'up'
+            transition()
         })
+
+        function transition(){
+            if(stateEvent != null)
+                stateEvent(defaultState)
+        }
+
+
+
+
         return {
             move: function(x, y) {
-                rect.move(x, y);
+                progressBar.move(x, y);
             },
             onclick: function(eventHandler){
                 clickEvent = eventHandler
-            }
+            },
+            stateChanged: function(eventHandler){
+                stateEvent = eventHandler
+            },
+            src: function() {
+                return textbox;
+            },
+            size: function(w, h) {
+                if (w > 10) {
+                    attr.width = w
+                }
+                if (h > 3) {
+                    attr.height = h;
+                }
+            },
+            setProgress: function(value){
+                innerRect.width(value)
+            },
+
         }
     }
 
