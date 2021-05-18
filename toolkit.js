@@ -239,16 +239,12 @@ var MyToolkit = (function() {
             stateChanged: function(eventHandler){
                 stateEvent = eventHandler                
             },
-            src: function() {
-                return radioButton;
-            },
             setText: function(msg) {
                 text.clear();
                 text.text(msg);
             },
-            getCheckedState: function() {
-                return checkedState;
-            }
+            src: radioButton,
+            getCheckedState: checkedState
         }
     }
 
@@ -259,11 +255,13 @@ var MyToolkit = (function() {
         var heightIncr = 30;
         var attributes = [...radioAttr]; //clone array
         var activeButton = -1; // -1 if none selected or the value of the button (starting from 0)
-        var checkedEvent = null;
+
+        var clickEvent = null;
+        var checkedState = isChecked; // true if checked; false otherwise
         var stateEvent = null;
         var defaultState = 'idle';
 
-        // create frame
+        // frame
         var frame = draw.group();
         var rect = frame.rect(frameWidth, frameHeight*radioAttr.length).fill({color: Colors.seafoam, opacity: 100});
 
@@ -274,45 +272,82 @@ var MyToolkit = (function() {
             var isChecked = attributes[i][1];
             var radioButton = new RadioButton(draw, msg, isChecked, heightIncr*i);
             radioButtonList.push(radioButton);
-
         }
+
+        for(var i = 0; i < radioButtonList.length; i++) {
+            radioButtonList[i].src.addEventListener('click', bindClick(i));
+            radioButtonList[i].src.addEventListener('mouseover', bindMouseOver(i));
+            radioButtonList[i].src.addEventListener('mouseout', bindMouseOut(i));
+            radioButtonList[i].src.addEventListener('mousedown', bindMouseDown(i));
+            radioButtonList[i].src.addEventListener('mouseup', e => {bindMouseUp(i, e)});
+        }
+     
+        function bindClick(i) {
+            console.log("you clicked region number " + i);
+        }
+
+        function bindMouseOver(i){
+            defaultState = 'hover'
+            transition()
+        }
+        function bindMouseOut(i){
+            defaultState = 'idle'
+            transition()
+        }
+        function bindMouseDown(i){
+            defaultState = 'pressed'
+            transition()
+        }
+        function bindMouseUp(i, event){
+            if(defaultState == 'pressed'){
+                console.log('hi there');
+                if(clickEvent != null)
+                    clickEvent(event)
+                    checkedState = !checkedState;
+
+                    // modify appearance
+                    if(checkedState){
+                        this.fill({color: Colors.blue})
+                        this.stroke({color: Colors.blue})
+                    }
+                    else {
+                        this.fill({color: Colors.white})
+                        this.stroke({color: Colors.black})
+                    }
+                    console.log('checked state is:' + checkedState)
+            }
+            defaultState = 'up'
+            transition()
+        }
+
+        function transition(){
+            if(stateEvent != null)
+                stateEvent(defaultState)
+        }
+
+        
 
         // function: get a dict of position: checkedState(true or false)
         function getCheckedStates(){
             var states = {}; 
-            for (var i = 0; i < attributes.length; i++){
-                states[i] = attributes[i][1];
+            for (var i = 0; i < radioButtonList.length; i++){
+                states[i] = radioButtonList[i].getCheckedState;
             }
             return states;
         }
-
-        // action states
-        frame.mouseover(function(){
-            defaultState = 'hover'
-            transition()
-        })
-        frame.mouseout(function(){
-            defaultState = 'idle'
-            transition()
-        })
-        // change the state to 'pressed' when mouse down
-        frame.mousedown(function(){
-            defaultState = 'pressed'
-            transition();
-        })
 
         // when the mouse is up, check if a radio button has been pressed
         // if true, uncheck the previous button
         // change activeButton var
         // check new button
-        frame.mouseup(function(event){
-            console.log('mouseup');
+        // frame.mouseup(function(event){
+            // console.log('mouseup');
             // this.fill({ color: Colors.lightblue})
             // if the radio group has been pressed...
-            if(defaultState == 'pressed'){
+            // if(defaultState == 'pressed'){
                 // if a radio button has been pressed...
                 // loop thru and check on click?????? how does onclick/check actually work??
-                var states = getCheckedStates();
+                // var states = getCheckedStates();
                 // for (var i = 0; i < states.length; i++){
                 //     states[i]
                 // }
@@ -326,15 +361,10 @@ var MyToolkit = (function() {
                 //     this.fill({color: Colors.white})
                 //     this.stroke({color: Colors.black})
                 // }
-            }
-            defaultState = 'up'
-            transition()
-        })
-
-        function transition(){
-            if(stateEvent != null)
-                stateEvent(defaultState)
-        }
+        //     }
+        //     defaultState = 'up'
+        //     transition()
+        // })
 
         return {
             move: function(x, y) {
@@ -344,17 +374,16 @@ var MyToolkit = (function() {
                 }
             },
             onclick: function(){
-                // checkedEvent = eventHandler;
-                // for (var rb in radioButtonList){
-                //     console.log(rb.getCheckedState);
-                //     rb.onclick;
-                // }
+                for (var rb in radioButtonList){
+                    console.log(rb.getCheckedState);
+                    rb.onclick;
+                }
             },
             stateChanged: function(eventHandler){
                 stateEvent = eventHandler;
             },
             src: function() {
-                return frame;
+                return radioButtonList;
             },
             setText: function(buttonNumber, msg) {
                 //takes a number from 1 to n
@@ -364,15 +393,90 @@ var MyToolkit = (function() {
     }
 
     var TextBox = function(draw){
-        //doesn't work!!
-        // var draw = SVG().addTo('body').size('1000px','1000px');
-        // var window = draw.group();
-        // window.rect(400, 400).stroke('orange').fill('white');
+        // TO DO:
+        // - consider caret with whitespace at the end of text. does not consider it (spaces)
+
+        // REQUIREMENTS:
+        // Visually support a caret | that informs the user about the position of the cursor. 
+        //      The caret should only be visually present when the widget has hover focus.
+        // Expose a custom property to get the text entered by the user.
+        // Expose an event handler that notifies consuming code when the text has changed.
+        // Expose an event handler that notifies consuming code when the widget state has changed.
 
         var textbox = draw.group();
         var rect = textbox.rect(200, 30).fill('white').stroke('black');
-        var text = textbox.text('hello').move(2, 4);
-        var caret = textbox.line(45, 2.5, 45, 25).stroke({width: 1, color: 'black'});
+        var text = textbox.text('hello').move(5, 6)
+        var caret = textbox.rect(2, 16).move(text.length()+6, 7)
+        var runner = caret.animate().width(0)
+        runner.loop(1000, 1, 0)
+    
+        SVG.on(window, 'keyup', (event) => {
+            // text can go to the end and then stop
+            console.log(event)
+            var key = event.key
+            if (key == 'Backspace'){
+                var msg = text.text()
+                text.text(msg.substring(0, msg.length-1))	
+            }
+            else if (event.altKey || event.ctrlKey) {
+                // do nothing
+                // otherwise, the letter will print
+            }
+            else if (event.key.length == 1){
+                if (text.length() < 186) {
+                    if (event.shiftKey){
+                        text.text(text.text() + event.key.toUpperCase())
+                    }
+                    else {
+                        text.text(text.text() + event.key)
+                    }
+                }
+                
+            }
+            caret.x(textbox.x()+text.length()+6)
+        })
+
+
+        // define widget states
+        var clickEvent = null
+        var stateEvent = null
+        var defaultState = 'idle'
+
+        // action states
+        rect.mouseover(function(){
+            // if the user just clicked and is still hovering, show the caret
+            // if(defaultState = 'up'){
+            //     caret.show();
+            // }
+            defaultState = 'hover'
+            transition()
+        })
+        rect.mouseout(function(){
+            defaultState = 'idle'
+            transition()
+        })
+        rect.mousedown(function(){
+            defaultState = 'pressed'
+            transition()
+        })
+        rect.mouseup(function(event){
+            if(defaultState == 'pressed'){
+                if(clickEvent != null)
+                    clickEvent(event)
+            }
+            defaultState = 'up'
+            transition()
+        })
+        // rect.keypress(function(event){
+        //     console.log(event);
+        // })
+
+        function transition(){
+            if(stateEvent != null)
+                stateEvent(defaultState)
+        }
+
+
         return {
             move: function(x, y) {
                 textbox.move(x, y);
@@ -380,13 +484,17 @@ var MyToolkit = (function() {
             onclick: function(eventHandler){
                 clickEvent = eventHandler
             },
-            src: function(){
+            stateChanged: function(eventHandler){
+                stateEvent = eventHandler
+            },
+            src: function() {
                 return textbox;
+            },
+            setText: function(msg) {
+                text.clear();
+                text.text(msg);
             }
         }
-        // group.move(100, 100);
-        // window.add(group);
-        // window.move(100, 100);
     }
 
     var ScrollBar = function(){
