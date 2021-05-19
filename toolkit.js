@@ -230,7 +230,7 @@ var MyToolkit = (function() {
         
     }
 
-    var RadioButton = function(draw, msg, isChecked, heightIncr=0){
+    var RadioButton = class {
          // REQUIREMENTS:
          // visually support checked and unchecked states [done]
          // support 2 to n numbers of buttons, where n is set 
@@ -245,224 +245,314 @@ var MyToolkit = (function() {
          // - do i need to handle errors? n = 1
 
         // create radio button widget
-        var width = 20;
-        var height = 20;
-        var whitespace = 3;
-        var radioButton  = draw.group();
-        var circle = radioButton.circle(width, height)
-            .fill({color: 'white'})
-            .stroke({ color: Colors.black, width: 1})
-            .move(whitespace, heightIncr+whitespace);
-        var text = radioButton.text(msg)
-            .font({family: 'Roboto', size: 14})
-            .move(width*1.5+whitespace, heightIncr+whitespace);
+        // function(draw, msg, isChecked, heightIncr=0)
+        constructor(draw, msg, isChecked){
+            this.draw = draw;
+            this.width = 20;
+            this.height = 20;
+            this.whitespace = 3;
+            this.heightIncr = 0;
+            this.radioButton = draw.group();
+            this.input = msg
+            this.circle = this.radioButton.circle(this.width)
+                .fill({color: Colors.white})
+                .stroke({color:'gray', width: 1});
+            this.radioButtonText = this.radioButton.text(this.input)
+                .font({family: 'Roboto', size: 14})
+                .move(this.width*1.5+this.whitespace, 0);
 
-        // define state vars
-        var clickEvent = null;
-        var checkedState = isChecked; // true if checked; false otherwise
-        var stateEvent = null;
-        var defaultState = 'idle';
 
-        // action states
-        circle.mouseover(function(){
-            defaultState = 'hover'
-            transition()
-        })
-        circle.mouseout(function(){
-            defaultState = 'idle'
-            transition()
-        })
-        circle.mousedown(function(){
-            defaultState = 'pressed'
-            transition()
-        })
-        circle.mouseup(function(event){
-            if(defaultState == 'pressed'){
-                if(clickEvent != null)
-                    clickEvent(event)
-                    checkedState = !checkedState;
+            // define widget states
+            this.checkedEvent = null
+            this.checkedState = isChecked
+            this.stateEvent = null
+            this.defaultState = 'idle'
+            this.registerEvent(this.radioButton)
+        }
 
-                    // modify appearance
-                    if(checkedState){
-                        this.fill({color: Colors.blue})
-                        this.stroke({color: Colors.blue})
-                    }
-                    else {
-                        this.fill({color: Colors.white})
-                        this.stroke({color: Colors.black})
-                    }
+        registerEvent(obj){
+            obj.click((event) => {
+            })
+            obj.mouseover((event) => {
+                this.defaultState = 'hover'
+                this.transition()
+            })
+            obj.mouseout((event) => {
+                this.defaultState = 'idle'
+                this.transition()
+            })
+            obj.mousedown((event) => {
+                this.defaultState = 'pressed'
+                this.transition()
+            })
+            obj.mouseup((event) => {
+                if(this.defaultState == 'pressed'){
+                    if(this.checkedEvent != null)
+                        this.checkedEvent(event);
+                        if(this.checkedState == 'unchecked'){
+                            this.checkedState = 'checked'
+                            this.circle.fill({color: Colors.blue})
+                            this.circle.stroke({color: Colors.blue})
+                        }
+                        else {
+                            this.checkedState = 'unchecked'
+                            this.circle.fill({color: Colors.white})
+                            this.circle.stroke({color: 'gray'})
+                        }
+                }
+                this.defaultState = 'up'
+                this.transition()
+            })
+        }
+
+        transition(){
+            if(this.stateEvent != null)
+                this.stateEvent(this.defaultState)
+        }
+
+        update(){
+            if(this.radioButtonText != null){
+                this.radioButtonText.text(this.input)
             }
-            defaultState = 'up'
-            transition()
-        })
-
-        function transition(){
-            if(stateEvent != null)
-                stateEvent(defaultState)
         }
 
-        return {
-            move: function(x, y) {
-                radioButton.move(x, y);
-            },
-            onclick: function(eventHandler){
-                checkedEvent = eventHandler
-            },
-            stateChanged: function(eventHandler){
-                stateEvent = eventHandler                
-            },
-            setText: function(msg) {
-                text.clear();
-                text.text(msg);
-            },
-            src: radioButton,
-            getCheckedState: checkedState
+
+        move(x, y) {
+            this.radioButton.move(x, y);
         }
-    }
-
-    var RadioButtons = function(draw, radioAttr){
-        // attributes
-        var frameWidth = 150;
-        var frameHeight = 30;
-        var heightIncr = 30;
-        var attributes = [...radioAttr]; //clone array
-        var activeButton = -1; // -1 if none selected or the value of the button (starting from 0)
-
-        var clickEvent = null;
-        var checkedState = isChecked; // true if checked; false otherwise
-        var stateEvent = null;
-        var defaultState = 'idle';
-
-        // frame
-        var frame = draw.group();
-        var rect = frame.rect(frameWidth, frameHeight*radioAttr.length).fill({color: Colors.seafoam, opacity: 100});
-
-        // create a list of radio buttons
-        var radioButtonList = [];
-        for (var i = 0; i < attributes.length; i++){
-            var msg = attributes[i][0];
-            var isChecked = attributes[i][1];
-            var radioButton = new RadioButton(draw, msg, isChecked, heightIncr*i);
-            radioButtonList.push(radioButton);
+        onclick(eventHandler) {
+            this.clickEvent = eventHandler
+        }
+        stateChanged(eventHandler) {
+            this.stateEvent = eventHandler
+        }
+        src() {
+            return this.radioButton;
+        }
+        set text(text) {
+            this.input = text;
+            this.update();
         }
 
-        for(var i = 0; i < radioButtonList.length; i++) {
-            radioButtonList[i].src.addEventListener('click', bindClick(i));
-            radioButtonList[i].src.addEventListener('mouseover', bindMouseOver(i));
-            radioButtonList[i].src.addEventListener('mouseout', bindMouseOut(i));
-            radioButtonList[i].src.addEventListener('mousedown', bindMouseDown(i));
-            radioButtonList[i].src.addEventListener('mouseup', e => {bindMouseUp(i, e)});
-        }
-     
-        function bindClick(i) {
-            // console.log("you clicked region number " + i);
-        }
 
-        function bindMouseOver(i){
-            defaultState = 'hover'
-            transition()
-        }
-        function bindMouseOut(i){
-            defaultState = 'idle'
-            transition()
-        }
-        function bindMouseDown(i){
-            defaultState = 'pressed'
-            transition()
-        }
-        function bindMouseUp(i, event){
-            if(defaultState == 'pressed'){
-                console.log('hi there');
-                if(clickEvent != null)
-                    clickEvent(event)
-                    checkedState = !checkedState;
+        // var width = 20;
+        // var height = 20;
+        // var whitespace = 3;
+        // var radioButton  = draw.group();
+        // var circle = radioButton.circle(width, height)
+        //     .fill({color: 'white'})
+        //     .stroke({ color: Colors.black, width: 1})
+        //     .move(whitespace, heightIncr+whitespace);
+        // var text = radioButton.text(msg)
+        //     .font({family: 'Roboto', size: 14})
+        //     .move(width*1.5+whitespace, heightIncr+whitespace);
 
-                    // modify appearance
-                    if(checkedState){
-                        this.fill({color: Colors.blue})
-                        this.stroke({color: Colors.blue})
-                    }
-                    else {
-                        this.fill({color: Colors.white})
-                        this.stroke({color: Colors.black})
-                    }
-                    console.log('checked state is:' + checkedState)
-            }
-            defaultState = 'up'
-            transition()
-        }
+        // // define state vars
+        // var clickEvent = null;
+        // var checkedState = isChecked; // true if checked; false otherwise
+        // var stateEvent = null;
+        // var defaultState = 'idle';
 
-        function transition(){
-            if(stateEvent != null)
-                stateEvent(defaultState)
-        }
+        // // action states
+        // circle.mouseover(function(){
+        //     defaultState = 'hover'
+        //     transition()
+        // })
+        // circle.mouseout(function(){
+        //     defaultState = 'idle'
+        //     transition()
+        // })
+        // circle.mousedown(function(){
+        //     defaultState = 'pressed'
+        //     transition()
+        // })
+        // circle.mouseup(function(event){
+        //     if(defaultState == 'pressed'){
+        //         if(clickEvent != null)
+        //             clickEvent(event)
+        //             checkedState = !checkedState;
 
-        
-
-        // function: get a dict of position: checkedState(true or false)
-        function getCheckedStates(){
-            var states = {}; 
-            for (var i = 0; i < radioButtonList.length; i++){
-                states[i] = radioButtonList[i].getCheckedState;
-            }
-            return states;
-        }
-
-        // when the mouse is up, check if a radio button has been pressed
-        // if true, uncheck the previous button
-        // change activeButton var
-        // check new button
-        // frame.mouseup(function(event){
-            // console.log('mouseup');
-            // this.fill({ color: Colors.lightblue})
-            // if the radio group has been pressed...
-            // if(defaultState == 'pressed'){
-                // if a radio button has been pressed...
-                // loop thru and check on click?????? how does onclick/check actually work??
-                // var states = getCheckedStates();
-                // for (var i = 0; i < states.length; i++){
-                //     states[i]
-                // }
-                // if(checkedState == 'unchecked'){
-                //     checkedState = 'checked'
-                //     this.fill({color: Colors.blue})
-                //     this.stroke({color: Colors.blue})
-                // }
-                // else {
-                //     checkedState = 'unchecked'
-                //     this.fill({color: Colors.white})
-                //     this.stroke({color: Colors.black})
-                // }
+        //             // modify appearance
+        //             if(checkedState){
+        //                 this.fill({color: Colors.blue})
+        //                 this.stroke({color: Colors.blue})
+        //             }
+        //             else {
+        //                 this.fill({color: Colors.white})
+        //                 this.stroke({color: Colors.black})
+        //             }
         //     }
         //     defaultState = 'up'
         //     transition()
         // })
 
-        return {
-            move: function(x, y) {
-                frame.move(x, y);
-                for (var i = 0; i < radioButtonList.length; i++){
-                    radioButtonList[i].move(x, y + (heightIncr*i));
-                }
-            },
-            onclick: function(){
-                for (var rb in radioButtonList){
-                    console.log(rb.getCheckedState);
-                    rb.onclick;
-                }
-            },
-            stateChanged: function(eventHandler){
-                stateEvent = eventHandler;
-            },
-            src: function() {
-                return radioButtonList;
-            },
-            setText: function(buttonNumber, msg) {
-                //takes a number from 1 to n
-                radioButtonList[buttonNumber-1].setText(msg);
-            }
-        }
+        // function transition(){
+        //     if(stateEvent != null)
+        //         stateEvent(defaultState)
+        // }
+
+        // return {
+        //     move: function(x, y) {
+        //         radioButton.move(x, y);
+        //     },
+        //     onclick: function(eventHandler){
+        //         checkedEvent = eventHandler
+        //     },
+        //     stateChanged: function(eventHandler){
+        //         stateEvent = eventHandler                
+        //     },
+        //     setText: function(msg) {
+        //         text.clear();
+        //         text.text(msg);
+        //     },
+        //     src: radioButton,
+        //     getCheckedState: checkedState
+        // }
     }
+
+    // var RadioButtons = function(draw, radioAttr){
+    //     // attributes
+    //     var frameWidth = 150;
+    //     var frameHeight = 30;
+    //     var heightIncr = 30;
+    //     var attributes = [...radioAttr]; //clone array
+    //     var activeButton = -1; // -1 if none selected or the value of the button (starting from 0)
+
+    //     var clickEvent = null;
+    //     var checkedState = isChecked; // true if checked; false otherwise
+    //     var stateEvent = null;
+    //     var defaultState = 'idle';
+
+    //     // frame
+    //     var frame = draw.group();
+    //     var rect = frame.rect(frameWidth, frameHeight*radioAttr.length).fill({color: Colors.seafoam, opacity: 100});
+
+    //     // create a list of radio buttons
+    //     var radioButtonList = [];
+    //     for (var i = 0; i < attributes.length; i++){
+    //         var msg = attributes[i][0];
+    //         var isChecked = attributes[i][1];
+    //         var radioButton = new RadioButton(draw, msg, isChecked, heightIncr*i);
+    //         radioButtonList.push(radioButton);
+    //     }
+
+    //     for(var i = 0; i < radioButtonList.length; i++) {
+    //         radioButtonList[i].src.addEventListener('click', bindClick(i));
+    //         radioButtonList[i].src.addEventListener('mouseover', bindMouseOver(i));
+    //         radioButtonList[i].src.addEventListener('mouseout', bindMouseOut(i));
+    //         radioButtonList[i].src.addEventListener('mousedown', bindMouseDown(i));
+    //         radioButtonList[i].src.addEventListener('mouseup', e => {bindMouseUp(i, e)});
+    //     }
+     
+    //     function bindClick(i) {
+    //         // console.log("you clicked region number " + i);
+    //     }
+
+    //     function bindMouseOver(i){
+    //         defaultState = 'hover'
+    //         transition()
+    //     }
+    //     function bindMouseOut(i){
+    //         defaultState = 'idle'
+    //         transition()
+    //     }
+    //     function bindMouseDown(i){
+    //         defaultState = 'pressed'
+    //         transition()
+    //     }
+    //     function bindMouseUp(i, event){
+    //         if(defaultState == 'pressed'){
+    //             console.log('hi there');
+    //             if(clickEvent != null)
+    //                 clickEvent(event)
+    //                 checkedState = !checkedState;
+
+    //                 // modify appearance
+    //                 if(checkedState){
+    //                     this.fill({color: Colors.blue})
+    //                     this.stroke({color: Colors.blue})
+    //                 }
+    //                 else {
+    //                     this.fill({color: Colors.white})
+    //                     this.stroke({color: Colors.black})
+    //                 }
+    //                 console.log('checked state is:' + checkedState)
+    //         }
+    //         defaultState = 'up'
+    //         transition()
+    //     }
+
+    //     function transition(){
+    //         if(stateEvent != null)
+    //             stateEvent(defaultState)
+    //     }
+
+        
+
+    //     // function: get a dict of position: checkedState(true or false)
+    //     function getCheckedStates(){
+    //         var states = {}; 
+    //         for (var i = 0; i < radioButtonList.length; i++){
+    //             states[i] = radioButtonList[i].getCheckedState;
+    //         }
+    //         return states;
+    //     }
+
+    //     // when the mouse is up, check if a radio button has been pressed
+    //     // if true, uncheck the previous button
+    //     // change activeButton var
+    //     // check new button
+    //     // frame.mouseup(function(event){
+    //         // console.log('mouseup');
+    //         // this.fill({ color: Colors.lightblue})
+    //         // if the radio group has been pressed...
+    //         // if(defaultState == 'pressed'){
+    //             // if a radio button has been pressed...
+    //             // loop thru and check on click?????? how does onclick/check actually work??
+    //             // var states = getCheckedStates();
+    //             // for (var i = 0; i < states.length; i++){
+    //             //     states[i]
+    //             // }
+    //             // if(checkedState == 'unchecked'){
+    //             //     checkedState = 'checked'
+    //             //     this.fill({color: Colors.blue})
+    //             //     this.stroke({color: Colors.blue})
+    //             // }
+    //             // else {
+    //             //     checkedState = 'unchecked'
+    //             //     this.fill({color: Colors.white})
+    //             //     this.stroke({color: Colors.black})
+    //             // }
+    //     //     }
+    //     //     defaultState = 'up'
+    //     //     transition()
+    //     // })
+
+    //     return {
+    //         move: function(x, y) {
+    //             frame.move(x, y);
+    //             for (var i = 0; i < radioButtonList.length; i++){
+    //                 radioButtonList[i].move(x, y + (heightIncr*i));
+    //             }
+    //         },
+    //         onclick: function(){
+    //             for (var rb in radioButtonList){
+    //                 console.log(rb.getCheckedState);
+    //                 rb.onclick;
+    //             }
+    //         },
+    //         stateChanged: function(eventHandler){
+    //             stateEvent = eventHandler;
+    //         },
+    //         src: function() {
+    //             return radioButtonList;
+    //         },
+    //         setText: function(buttonNumber, msg) {
+    //             //takes a number from 1 to n
+    //             radioButtonList[buttonNumber-1].setText(msg);
+    //         }
+    //     }
+    // }
 
     var TextBox = class{
         // TO DO:
@@ -647,19 +737,16 @@ var MyToolkit = (function() {
 
                     var diff = event.clientY - this.currentY
                     if (lowerScrollThumbPosition >= lowerBoundary){
-                        console.log('first')
                         if (diff < 0) {
                             this.innerRect.dy(diff)
                         }
                     }
                     else if (upperScrollThumbPosition <= upperBoundary){
-                        console.log('second')
                         if (diff > 0) {
                             this.innerRect.dy(diff)
                         }
                     }
                     else {
-                        console.log('third')
                         this.innerRect.dy(diff)
                     }
                     this.currentY = event.clientY
@@ -848,36 +935,119 @@ var MyToolkit = (function() {
     }
 
     // custom widget
-    var ToggleSwitch = function(){
-        var draw = SVG().addTo('body').size('100%','100%');
-        var rect = draw.rect(100,50).fill('purple')
-        var clickEvent = null
+    var ToggleSwitch = class{
+        constructor(draw){
+            this.draw = draw;
+            this.width = 35;
+            this.height = 20;
+            this.toggleSwitch = draw.group();
+            this.rect = this.toggleSwitch.rect(this.width, this.height)
+                .fill({color: 'white'})
+                .stroke({ color: Colors.gray, width: 1})
+                .radius(10);
+            this.circle = this.toggleSwitch.circle(this.height-4)
+                .move(2,2)
+                .fill(Colors.gray);
 
-        rect.mouseover(function(){
-            this.fill({ color: 'blue'})
-        })
-        rect.mouseout(function(){
-            this.fill({ color: 'red'})
-        })
-        rect.mouseup(function(){
-            this.fill({ color: 'red'})
-        })
-        rect.click(function(event){
-            this.fill({ color: 'pink'})
-            if(clickEvent != null)
-                clickEvent(event)
-        })
-        return {
-            move: function(x, y) {
-                rect.move(x, y);
-            },
-            onclick: function(eventHandler){
-                clickEvent = eventHandler
+
+            // define widget states
+            this.checkedEvent = null
+            this.checkedState = 'off'
+            this.stateEvent = null
+            this.defaultState = 'idle'
+            this.registerEvent(this.toggleSwitch)
+        }
+
+        registerEvent(obj){
+            obj.click((event) => {
+            })
+            obj.mouseover((event) => {
+                this.defaultState = 'hover'
+                this.transition()
+            })
+            obj.mouseout((event) => {
+                this.defaultState = 'idle'
+                this.transition()
+            })
+            obj.mousedown((event) => {
+                this.defaultState = 'pressed'
+                this.transition()
+            })
+            obj.mouseup((event) => {
+                if(this.defaultState == 'pressed'){
+                    if(this.checkedEvent != null)
+                        this.checkedEvent(event);
+                        if(this.checkedState == 'off'){
+                            this.checkedState = 'on'
+                            this.update()
+                        }
+                        else {
+                            this.checkedState = 'off'
+                            this.update()
+                        }
+                }
+                this.defaultState = 'up'
+                this.transition()
+            })
+        }
+
+        transition(){
+            if(this.stateEvent != null)
+                this.stateEvent(this.defaultState)
+        }
+
+        handleEvent(e) {
+            switch(e.type) {
+                case "click":
+                    this.clickEvent(e);
+                break;
+                case "mouseover":
+                    this.mouseOverEvent(e);
+                break;
+                case "mouseout":
+                    this.mouseOutEvent(e);
+                break;
+                case "mousedown":
+                    this.mouseDownEvent(e);
+                break;
+                case "mouseup":
+                    this.mouseUpEvent(e);
+                break;
             }
+        }
+
+        update(){
+            if(this.checkedState == 'on') {
+                this.rect.fill({color: Colors.lightblue})
+                this.rect.stroke({color: Colors.lightblue})
+                this.circle.fill({color: Colors.white})
+                this.runner = this.circle.animate({duration: 300}).dx(15)
+            }
+            else if(this.checkedState == 'off') {
+                this.rect.fill({color: Colors.white})
+                this.rect.stroke({color: Colors.gray})
+                this.circle.fill({color: Colors.gray})
+                this.runner = this.circle.animate({duration: 300}).dx(-15)
+            }
+        }
+
+
+        move(x, y) {
+            this.toggleSwitch.move(x, y);
+        }
+        onclick(eventHandler) {
+            this.clickEvent = eventHandler
+        }
+        stateChanged(eventHandler) {
+            // console.log(eventHandler)
+            this.stateEvent = eventHandler
+        }
+        src() {
+            return this.toggleSwitch;
         }
     }
 
-return {Button, CheckBox, RadioButtons, TextBox, ScrollBar, ProgressBar, ToggleSwitch}
+return {Button, CheckBox, RadioButton, TextBox, ScrollBar, ProgressBar, ToggleSwitch}
 
 
 }());

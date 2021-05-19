@@ -51,17 +51,19 @@ SVG.on(document, 'DOMContentLoaded', function() {
 
 
 
-	var radioAttr = [];
-	radioAttr.push(['Radio button 1', false]);
-	radioAttr.push(['Radio button 2', false]);
-	radioAttr.push(['Radio button 3', true]);
-	var radioButtons = new MyToolkit.RadioButtons(draw, radioAttr);
-	radioButtons.move(20, 150);
-	// radioButtons.setText(1, 'hi');
-	// radioButtons.onclick;
-	radioButtons.stateChanged(function(event){
-		console.log('state changed to: ' + event)
-	})
+	var rb = new MyToolkit.RadioButton(draw, 'radio button', false);
+	rb.move(20, 150)
+	// var radioAttr = [];
+	// radioAttr.push(['Radio button 1', false]);
+	// radioAttr.push(['Radio button 2', false]);
+	// radioAttr.push(['Radio button 3', true]);
+	// var radioButtons = new MyToolkit.RadioButtons(draw, radioAttr);
+	// radioButtons.move(20, 150);
+	// // radioButtons.setText(1, 'hi');
+	// // radioButtons.onclick;
+	// radioButtons.stateChanged(function(event){
+	// 	console.log('state changed to: ' + event)
+	// })
 
 
 
@@ -106,13 +108,21 @@ SVG.on(document, 'DOMContentLoaded', function() {
 		console.log('state changed to: ' + event)
 	})
 
+	var toggle = new MyToolkit.ToggleSwitch(draw);
+	toggle.move(300, 250);
+	toggle.onclick(function(event){
+		console.log(event)
+		console.log(event.target)
+	})
+	toggle.stateChanged(function(event){
+		console.log('state changed to: ' + event)
+	})
 
 	// add widgets to frame
 	frame.add(btn.src);
 	frame.add(checkbox.src);
-	frame.add(radioButtons.src);
+	frame.add(rb.src);
 	frame.add(textbox.src);
 	frame.add(progress.src);
-	// frame.add(scroll.src);
-	// frame.move(10, 10);
+	frame.add(toggle.src);
 })
