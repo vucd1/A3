@@ -195,13 +195,9 @@ var MyToolkit = (function() {
          // expose a custom label property to set the text that appears to the RIGHT of each button
          // expose an event handler that notifies consuming code when the checked state has changed
          //     and which n has been checked
-         // expose an event handler that notifies consuming code when the widget state has changed [done]
+         // expose an event handler that notifies consuming code when the widget state has changed
 
-         // QUESTIONS:
-         // - do i need to handle errors? n = 1
 
-        // create radio button widget
-        // function(draw, msg, isChecked, heightIncr=0)
         constructor(draw, radioAttr){
             // appearance
             this.width = 20;
@@ -228,7 +224,6 @@ var MyToolkit = (function() {
                     .move(this.width*1.5+this.whitespace, this.heightIncr*i);
                 this.registerEvent(this.circle)
                 this.radioButtonList.push(this.radioButton)
-                // console.log(this.radioButtonList)
         
             }
             
@@ -540,7 +535,9 @@ var MyToolkit = (function() {
             this.height = 30;
             this.textbox = draw.group();
             this.rect = this.textbox.rect(200, 30).fill('white').stroke('black');
-            this._text = this.textbox.text('').move(5, 0);
+            this._text = this.textbox.text('').move(5, 2)               
+                .font({family: 'Roboto',
+                    size: 14});
             this.caret = this.textbox.rect(2, 16).move(this._text.length()+6, 7);
             this.runner = this.caret.animate().width(0)
             this.runner.loop(1000, 1, 0)
@@ -816,7 +813,7 @@ var MyToolkit = (function() {
 
             this.progressBar = draw.group();
             this.outterRect = this.progressBar.rect(this._width, this._height).fill('white').stroke('black');
-            this.innerRect = this.progressBar.rect(this._inc, this._height).fill('green');
+            this.innerRect = this.progressBar.rect(this._inc, this._height).fill(Colors.lightblue);
 
             // define widget states
             this.incrEvent = null
@@ -912,7 +909,7 @@ var MyToolkit = (function() {
             this.toggleSwitch = draw.group();
             this.rect = this.toggleSwitch.rect(this.width, this.height)
                 .fill({color: 'white'})
-                .stroke({ color: Colors.gray, width: 1})
+                .stroke({ color: Colors.gray, width: 2})
                 .radius(10);
             this.circle = this.toggleSwitch.circle(this.height-4)
                 .move(2,2)

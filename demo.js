@@ -7,7 +7,7 @@ SVG.on(document, 'DOMContentLoaded', function() {
 	// create the frame
 	var draw = SVG().addTo('body').size('100%','100%');
 	var frame = draw.group();
-	frame.rect(1200,800).stroke('gray').fill('white');
+	frame.rect(500,500).stroke('gray').fill('white');
 
 
 	// create button
