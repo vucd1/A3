@@ -227,76 +227,6 @@ var MyToolkit = (function() {
             this.input = text;
             this.update();
         }
-
-        // // create checkbox widget
-        // var width = 20;
-        // var height = 20;
-        // var checkbox  = draw.group();
-        // var rect = checkbox.rect(width, height).fill({color: 'white'}).stroke({ color: 'gray', width: 1});
-        // var text = checkbox.text('Checkbox').font({family: 'Roboto', size: 14}).move(width*1.5, 0);
-
-        // // define state vars
-        // var checkedEvent = null;
-        // var checkedState = 'unchecked';
-        // var stateEvent = null;
-        // var defaultState = 'idle';
-
-        // // action states
-        // rect.mouseover(function(){
-        //     defaultState = 'hover'
-        //     transition()
-        // })
-        // rect.mouseout(function(){
-        //     defaultState = 'idle'
-        //     transition()
-        // })
-        // rect.mousedown(function(){
-        //     defaultState = 'pressed'
-        //     transition()
-        // })
-        // rect.mouseup(function(event){
-        //     if(defaultState == 'pressed'){
-        //         if(checkedEvent != null)
-        //         checkedEvent(event);
-        //             if(checkedState == 'unchecked'){
-        //                 checkedState = 'checked'
-        //                 this.fill({color: Colors.blue})
-        //                 this.stroke({color: Colors.blue})
-        //             }
-        //             else {
-        //                 checkedState = 'unchecked'
-        //                 this.fill({color: Colors.white})
-        //                 this.stroke({color: Colors.black})
-        //             }
-        //     }
-        //     defaultState = 'up'
-        //     transition()
-        // })
-
-        // function transition(){
-        //     if(stateEvent != null)
-        //         stateEvent(defaultState)
-        // }
-
-        // return {
-        //     move: function(x, y) {
-        //         checkbox.move(x, y);
-        //     },
-        //     onclick: function(eventHandler){
-        //         checkedEvent = eventHandler
-        //     },
-        //     stateChanged: function(eventHandler){
-        //         stateEvent = eventHandler
-        //     },
-        //     src: function() {
-        //         return checkbox;
-        //     },
-        //     setText: function(msg) {
-        //         text.clear();
-        //         text.text(msg);
-        //     }
-        // }
-
         
     }
 
@@ -534,7 +464,7 @@ var MyToolkit = (function() {
         }
     }
 
-    var TextBox = function(draw){
+    var TextBox = class{
         // TO DO:
         // - consider caret with whitespace at the end of text. does not consider it (spaces)
         // - caret should only be visible on hover focus
@@ -546,127 +476,268 @@ var MyToolkit = (function() {
         // Expose an event handler that notifies consuming code when the text has changed. [???]
         // Expose an event handler that notifies consuming code when the widget state has changed. [done]
 
-        var textbox = draw.group();
-        var rect = textbox.rect(200, 30).fill('white').stroke('black');
-        var text = textbox.text('').move(5, 0)
-        var caret = textbox.rect(2, 16).move(text.length()+6, 7)
-        var runner = caret.animate().width(0)
-        runner.loop(1000, 1, 0)
-    
-        SVG.on(window, 'keyup', (event) => {
-            // text can go to the end and then stop
-            // console.log(event)
-            var key = event.key
-            if (key == 'Backspace'){
-                var msg = text.text()
-                text.text(msg.substring(0, msg.length-1))	
+        //create textbox component
+        constructor(draw){
+            this.draw = draw;
+            this.width = 200;
+            this.height = 30;
+            this.textbox = draw.group();
+            this.rect = this.textbox.rect(200, 30).fill('white').stroke('black');
+            this.text = this.textbox.text('').move(5, 0);
+            this.caret = this.textbox.rect(2, 16).move(this.text.length()+6, 7);
+            this.runner = this.caret.animate().width(0)
+            this.runner.loop(1000, 1, 0)
+
+            // define widget states
+            this.keyEvent = null
+            this.stateEvent = null
+            this.defaultState = 'idle'
+            this.registerEvent(this.textbox);
             }
-            else if (event.altKey || event.ctrlKey) {
-                // do nothing
-                // otherwise, the letter will print
+
+        registerEvent(obj){
+            obj.click((event) => {
+            })
+            obj.mouseover((event) => {
+                this.defaultState = 'hover'
+                this.transition()
+            })
+            obj.mouseout((event) => {
+                this.defaultState = 'idle'
+                this.transition()
+            })
+            obj.mousedown((event) => {
+                this.defaultState = 'pressed'
+                this.transition()
+            })
+            obj.mouseup((event) => {
+                if(this.defaultState == 'pressed'){
+                    if(this.clickEvent != null)
+                        this.clickEvent(event)
+                }
+                this.defaultState = 'up'
+                this.transition()
+            })
+            SVG.on(window, 'keyup', (event) => {
+                // text can go to the end and then stop
+                // console.log(event)
+                var key = event.key
+                if (key == 'Backspace'){
+                    var msg = this.text.text()
+                    this.text.text(msg.substring(0, msg.length-1))	
+                }
+                else if (event.altKey || event.ctrlKey) {
+                    // do nothing
+                    // otherwise, the letter will print
+                }
+                else if (event.key.length == 1){
+                    if (this.text.length() < 186) {
+                        if (event.shiftKey){
+                            this.text.text(this.text.text() + event.key.toUpperCase())
+                        }
+                        else {
+                            this.text.text(this.text.text() + event.key)
+                        }
+                    }
+                    
+                }
+                this.caret.x(this.textbox.x()+this.text.length()+6)
+            })
+        }
+        transition(){
+            if(this.stateEvent != null)
+                this.stateEvent(this.defaultState)
+        }
+
+        update(){
+            if(this.buttonText != null){
+                this.buttonText.text(this.text)
             }
-            else if (event.key.length == 1){
-                if (text.length() < 186) {
-                    if (event.shiftKey){
-                        text.text(text.text() + event.key.toUpperCase())
+        }
+
+
+        move(x, y) {
+            this.textbox.move(x, y);
+        }
+        textChanged(eventHandler) {
+            // doesn't work
+            this.keyEvent = eventHandler
+        }
+        stateChanged(eventHandler) {
+            // console.log(eventHandler)
+            this.stateEvent = eventHandler
+        }
+        src() {
+            return this.textbox;
+        }
+    }
+
+    var ScrollBar = class {
+        // REQUIREMENTS:
+        // Expose a custom property to set the height of the scroll bar.
+        // Expose a custom property to get the position of the scroll thumb.
+        // Expose an event handler that notifies consuming code when the scroll thumb has moved and in which direction.
+        // Expose an event handler that notifies consuming code when the widget state has changed.
+
+        constructor(draw, w=20, h=150){
+            this.draw = draw;
+            this._width = w;
+            this._height = h;
+            this._scrollHeight = h/6;
+            this.arrowArray = [[3, this._width-5],[this._width/2, 3], [this._width-3, this._width-5]];
+            this.currentY = 0;
+
+            this.progressBar = draw.group();
+            this.outterRect = this.progressBar.rect(this._width, this._height).fill('white').stroke('black');
+            this.innerRect = this.progressBar.rect(this._width, this._scrollHeight).move(0, this._width-1).fill(Colors.gray);
+
+            // up arrow button
+            this.upArrowButton = this.progressBar.group();
+            this.upArrowRect = this.upArrowButton.rect(this._width-2, this._width-2)
+                .move(1, 1)
+                .fill(Colors.lightgray);
+            this.upArrow = this.upArrowButton.polygon()
+            this.upArrow.plot(this.arrowArray)
+
+            // down arrow button
+            this.downArrowButton = this.progressBar.group();
+            this.downArrowRect = this.downArrowButton.rect(this._width-2, this._width-2)
+                .move(1, this._height-this._width+1)
+                .fill(Colors.lightgray);
+            this.downArrow = this.downArrowButton.polygon()
+            this.downArrow.plot(this.arrowArray).move(3, this._height-15).rotate(180)
+
+            // define widget states
+            this.scrollEvent = null
+            this.stateEvent = null
+            this.defaultState = 'idle'
+            this.registerEvent(this.outterRect);
+            this.registerEvent(this.innerRect);
+            }
+
+        registerEvent(obj){
+            obj.click((event) => {
+            })
+            obj.mouseover((event) => {
+                this.defaultState = 'hover'
+                this.transition()
+            })
+            obj.mouseout((event) => {
+                this.defaultState = 'idle'
+                this.transition()
+            })
+            obj.mousedown((event) => {
+                this.defaultState = 'pressed'
+                this.transition()
+                this.currentY = event.clientY
+            })
+            obj.mousemove((event) => {
+                if (this.defaultState == 'pressed'){
+                    // console.log(event)
+                    var lowerBoundary = this.outterRect.y() + this._height - this._width
+                    var lowerScrollThumbPosition = this.innerRect.y() + this._scrollHeight - 1
+
+                    var upperBoundary = this.outterRect.y() + this._width
+                    var upperScrollThumbPosition = this.innerRect.y() + 1
+
+                    // console.log('upperbound: ' + upperBoundary)
+                    // console.log('upper scroll bound: ' + upperScrollThumbPosition)
+                    // console.log('lowerbound: ' + lowerBoundary)
+                    // console.log('lower scroll bound: ' + lowerScrollThumbPosition)
+
+                    var diff = event.clientY - this.currentY
+                    if (lowerScrollThumbPosition >= lowerBoundary){
+                        console.log('first')
+                        if (diff < 0) {
+                            this.innerRect.dy(diff)
+                        }
+                    }
+                    else if (upperScrollThumbPosition <= upperBoundary){
+                        console.log('second')
+                        if (diff > 0) {
+                            this.innerRect.dy(diff)
+                        }
                     }
                     else {
-                        text.text(text.text() + event.key)
+                        console.log('third')
+                        this.innerRect.dy(diff)
                     }
+                    this.currentY = event.clientY
+
                 }
-                
+
+            })
+            obj.mouseup((event) => {
+                console.log('up')
+                this.defaultState = 'up'
+                this.transition()
+            })
+        }
+        transition(){
+            if(this.stateEvent != null)
+                this.stateEvent(this.defaultState)
+        }
+
+        update(){
+            if(this._width != null){
+                this.progressBar.width(this._width)
             }
-            caret.x(textbox.x()+text.length()+6)
-        })
-
-
-        // define widget states
-        var clickEvent = null
-        var stateEvent = null
-        var defaultState = 'idle'
-
-        // action states
-        rect.mouseover(function(){
-            // if the user just clicked and is still hovering, show the caret
-            // if(defaultState = 'up'){
-            //     caret.show();
-            // }
-            defaultState = 'hover'
-            transition()
-        })
-        rect.mouseout(function(){
-            defaultState = 'idle'
-            transition()
-        })
-        rect.mousedown(function(){
-            defaultState = 'pressed'
-            transition()
-        })
-        rect.mouseup(function(event){
-            if(defaultState == 'pressed'){
-                if(clickEvent != null)
-                    clickEvent(event)
+            if(this._height != null){
+                this.progressBar.height(this._height)
             }
-            defaultState = 'up'
-            transition()
-        })
+            if(this._inc != null){
+                this.innerRect.width(this._inc)
+            }
+        }
 
-        function transition(){
-            if(stateEvent != null)
-                stateEvent(defaultState)
+        moveScrollThumb(){
+
         }
 
 
-        return {
-            move: function(x, y) {
-                textbox.move(x, y);
-            },
-            onclick: function(eventHandler){
-                clickEvent = eventHandler
-            },
-            stateChanged: function(eventHandler){
-                stateEvent = eventHandler
-            },
-            src: function() {
-                return textbox;
-            },
-            setText: function(msg) {
-                text.clear();
-                text.text(msg);
-            }
+        move(x, y) {
+            this.progressBar.move(x, y);
         }
-    }
-
-    var ScrollBar = function(draw){
-        var draw = SVG().addTo('body').size('100%','100%');
-        var rect = draw.rect(100,50).fill('purple')
-        var clickEvent = null
-
-        rect.mouseover(function(){
-            this.fill({ color: 'blue'})
-        })
-        rect.mouseout(function(){
-            this.fill({ color: 'red'})
-        })
-        rect.mouseup(function(){
-            this.fill({ color: 'red'})
-        })
-        rect.click(function(event){
-            this.fill({ color: 'pink'})
-            if(clickEvent != null)
-                clickEvent(event)
-        })
-        return {
-            move: function(x, y) {
-                rect.move(x, y);
-            },
-            onclick: function(eventHandler){
-                clickEvent = eventHandler
-            }
+        // textChanged(eventHandler) {
+        //     // doesn't work
+        //     this.keyEvent = eventHandler
+        // }
+        stateChanged(eventHandler) {
+            this.stateEvent = eventHandler
+        }
+        src() {
+            return this.textbox;
+        }
+        set width(value) {
+            this._width = value;
+            this.update();
+        }
+        set height(value) {
+            this._height = value;
+            this.update();
+        }
+        set increment(value) {
+            this._inc = value;
+            this.update();
+        }
+        get increment() {
+            return this._inc
+        }
+        size(w, h) {
+            this._width = w;
+            this._height = h;
+            this.update();
+        }
+        setProgress(value) {
+            this._inc = value
+            this.update()
         }
     }
 
-    var ProgressBar = function(draw, w=200, h=15, i=25){
+    var ProgressBar = class {
+        // TO DO:
+        // - implement 0-100 thing
+
         // REQUIREMENTS:
         // Expose a custom property to set the width of the progress bar.
         // Expose a custom property to set the increment value of the progress bar.
@@ -678,95 +749,101 @@ var MyToolkit = (function() {
         // Expose an event handler that notifies consuming code when the progress bar has incremented.
         // Expose an event handler that notifies consuming code when the widget state has changed.
 
-        //attributes
-        var width = w;
-        var height = h;
+        constructor(draw, w=200, h=15){
+            this.draw = draw;
+            this._width = w;
+            this._height = h;
+            this._inc = w;
 
-        // var attr = {
-        //     width: w,
-        //     height: h,
-        //     // custom property to set the increment value of the progress bar
-        //     set progress(value) {
-        //         console.log(value)
-        //         width = value
-        //         innerRect.width(value)
-        //     },
-        //     // custom property to get the increment value of the progress bar
-        //     get progress() {
-        //         return width
-        //     }
-        // }
+            this.progressBar = draw.group();
+            this.outterRect = this.progressBar.rect(this._width, this._height).fill('white').stroke('black');
+            this.innerRect = this.progressBar.rect(this._inc, this._height).fill('green');
 
-        // create progress bar
-        var progressBar = draw.group();
-        var outterRect = progressBar.rect(width, height).fill('white').stroke('black');
-        var innerRect = progressBar.rect(width, height).fill('green');
-
-
-        // define widget states
-        var clickEvent = null
-        var stateEvent = null
-        var defaultState = 'idle'
-
-        // action states
-        outterRect.mouseover(function(){
-            // if the user just clicked and is still hovering, show the caret
-            // if(defaultState = 'up'){
-            //     caret.show();
-            // }
-            defaultState = 'hover'
-            transition()
-        })
-        outterRect.mouseout(function(){
-            defaultState = 'idle'
-            transition()
-        })
-        outterRect.mousedown(function(){
-            defaultState = 'pressed'
-            transition()
-        })
-        outterRect.mouseup(function(event){
-            if(defaultState == 'pressed'){
-                if(clickEvent != null)
-                    clickEvent(event)
+            // define widget states
+            this.incEvent = null
+            this.stateEvent = null
+            this.defaultState = 'idle'
+            this.registerEvent(this.outterRect);
             }
-            defaultState = 'up'
-            transition()
-        })
 
-        function transition(){
-            if(stateEvent != null)
-                stateEvent(defaultState)
+        registerEvent(obj){
+            obj.click((event) => {
+            })
+            obj.mouseover((event) => {
+                this.defaultState = 'hover'
+                this.transition()
+            })
+            obj.mouseout((event) => {
+                this.defaultState = 'idle'
+                this.transition()
+            })
+            obj.mousedown((event) => {
+                this.defaultState = 'pressed'
+                this.transition()
+            })
+            obj.mouseup((event) => {
+                if(this.defaultState == 'pressed'){
+                    if(this.clickEvent != null)
+                        this.clickEvent(event)
+                }
+                this.defaultState = 'up'
+                this.transition()
+            })
+        }
+        transition(){
+            if(this.stateEvent != null)
+                this.stateEvent(this.defaultState)
+        }
+
+        update(){
+            if(this._width != null){
+                this.progressBar.width(this._width)
+            }
+            if(this._height != null){
+                this.progressBar.height(this._height)
+            }
+            if(this._inc != null){
+                this.innerRect.width(this._inc)
+            }
         }
 
 
-
-
-        return {
-            move: function(x, y) {
-                progressBar.move(x, y);
-            },
-            onclick: function(eventHandler){
-                clickEvent = eventHandler
-            },
-            stateChanged: function(eventHandler){
-                stateEvent = eventHandler
-            },
-            src: function() {
-                return textbox;
-            },
-            size: function(w, h) {
-                if (w > 10) {
-                    // attr.width = w
-                }
-                if (h > 3) {
-                    // attr.height = h;
-                }
-            },
-            setProgress: function(value){
-                innerRect.width(value)
-            },
-
+        move(x, y) {
+            this.progressBar.move(x, y);
+        }
+        // textChanged(eventHandler) {
+        //     // doesn't work
+        //     this.keyEvent = eventHandler
+        // }
+        stateChanged(eventHandler) {
+            this.stateEvent = eventHandler
+        }
+        src() {
+            return this.textbox;
+        }
+        set width(value) {
+            this._width = value;
+            this.update();
+        }
+        set height(value) {
+            this._height = value;
+            this.update();
+        }
+        set increment(value) {
+            this._inc = value;
+            this.update();
+        }
+        get increment() {
+            return this._inc
+        }
+        size(w, h) {
+            this._width = w;
+            this._height = h;
+            this.update();
+        }
+        setProgress(value) {
+            this._inc = value
+            this.update()
         }
     }
 
