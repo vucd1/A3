@@ -1,0 +1,22 @@
+{
+  "name": "a3",
+  "version": "1.0.0",
+  "description": "",
+  "main": "demo.js",
+  "scripts": {
+    "doc": "jsdoc -c jsdoc.json"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vucd1/A3.git"
+  },
+  "author": "Christina Vu",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/vucd1/A3/issues"
+  },
+  "homepage": "https://github.com/vucd1/A3#readme",
+  "devDependencies": {
+    "jsdoc": "^3.6.7"
+  }
+}
