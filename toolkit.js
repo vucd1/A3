@@ -3,9 +3,6 @@ import {Colors} from './colors.js';
 
 var MyToolkit = (function() {
     var Button = class{
-        // TO-DO:
-        // - consider longer text (elongating button or adding '...')
-
         // REQUIREMENTS:
         // Visually change for at least 3 states (e.g., color change on hover)
         // Expose a custom label property to set the text on the button
@@ -13,11 +10,11 @@ var MyToolkit = (function() {
         // Expose an event handler that notifies consuming code when the widget state has changed
 
         //create button component
-        constructor(draw, w=100, h=40){
+        constructor(draw, w=125, h=40){
             this.draw = draw;
             this.width = w;
             this.height = h;
-            this.button = draw.group();
+            this.button = this.draw.group();
             this.input = 'Button'
             this.rect = this.button.rect(this.width, this.height)
                 .fill({color: Colors.lightblue})
@@ -26,7 +23,7 @@ var MyToolkit = (function() {
                 .font({family: 'Roboto',
                         size: 14,
                         anchor: 'middle'})
-                .move(this.width/4, this.height/4);
+                .move(this.width/3, this.height/4);
 
             // define widget states
             this.clickEvent = null
@@ -68,26 +65,6 @@ var MyToolkit = (function() {
                 this.stateEvent(this.defaultState)
         }
 
-        handleEvent(e) {
-            switch(e.type) {
-                case "click":
-                    this.clickEvent(e);
-                break;
-                case "mouseover":
-                    this.mouseOverEvent(e);
-                break;
-                case "mouseout":
-                    this.mouseOutEvent(e);
-                break;
-                case "mousedown":
-                    this.mouseDownEvent(e);
-                break;
-                case "mouseup":
-                    this.mouseUpEvent(e);
-                break;
-            }
-        }
-
         update(){
             if(this.buttonText != null){
                 this.buttonText.text(this.input)
@@ -125,12 +102,12 @@ var MyToolkit = (function() {
             this.draw = draw;
             this.width = 20;
             this.height = 20;
-            this.checkbox = draw.group();
+            this.checkbox = this.draw.group();
             this.input = 'Checkbox'
             this.rect = this.checkbox.rect(this.width, this.height)
                 .fill({color: 'white'})
                 .stroke({ color: 'gray', width: 1});
-            this.checkBoxText = this.checkbox.text('Checkbox')
+            this.checkBoxText = this.checkbox.text(this.input)
                 .font({family: 'Roboto', size: 14})
                 .move(this.width*1.5, 0);
 
@@ -183,26 +160,6 @@ var MyToolkit = (function() {
                 this.stateEvent(this.defaultState)
         }
 
-        handleEvent(e) {
-            switch(e.type) {
-                case "click":
-                    this.clickEvent(e);
-                break;
-                case "mouseover":
-                    this.mouseOverEvent(e);
-                break;
-                case "mouseout":
-                    this.mouseOutEvent(e);
-                break;
-                case "mousedown":
-                    this.mouseDownEvent(e);
-                break;
-                case "mouseup":
-                    this.mouseUpEvent(e);
-                break;
-            }
-        }
-
         update(){
             if(this.checkBoxText != null){
                 this.checkBoxText.text(this.input)
@@ -214,10 +171,9 @@ var MyToolkit = (function() {
             this.checkbox.move(x, y);
         }
         onclick(eventHandler) {
-            this.clickEvent = eventHandler
+            this.checkedEvent = eventHandler
         }
         stateChanged(eventHandler) {
-            // console.log(eventHandler)
             this.stateEvent = eventHandler
         }
         src() {
@@ -246,28 +202,43 @@ var MyToolkit = (function() {
 
         // create radio button widget
         // function(draw, msg, isChecked, heightIncr=0)
-        constructor(draw, msg, isChecked){
-            this.draw = draw;
+        constructor(draw, radioAttr){
+            // appearance
             this.width = 20;
             this.height = 20;
             this.whitespace = 3;
-            this.heightIncr = 0;
-            this.radioButton = draw.group();
-            this.input = msg
-            this.circle = this.radioButton.circle(this.width)
-                .fill({color: Colors.white})
-                .stroke({color:'gray', width: 1});
-            this.radioButtonText = this.radioButton.text(this.input)
-                .font({family: 'Roboto', size: 14})
-                .move(this.width*1.5+this.whitespace, 0);
+            this.heightIncr = 30;
 
+            // radio attributes
+            this.attributes = [...radioAttr];
+            
+            // create group of radio buttons
+            this.radioButtonList = [];
+            this.radioButtonGroup = draw.group();
+            for (var i = 0; i < this.attributes.length; i++){
+                //create radio button
+                this.radioButton = this.radioButtonGroup.group();
+                this.input = this.attributes[i][0]
+                this.circle = this.radioButton.circle(this.width)
+                    .fill({color: Colors.white})
+                    .stroke({color:'gray', width: 1})
+                    .move(0, this.heightIncr*i);
+                this.radioButtonText = this.radioButton.text(this.input)
+                    .font({family: 'Roboto', size: 14})
+                    .move(this.width*1.5+this.whitespace, this.heightIncr*i);
+                this.registerEvent(this.circle)
+                this.radioButtonList.push(this.radioButton)
+                // console.log(this.radioButtonList)
+        
+            }
+            
 
             // define widget states
-            this.checkedEvent = null
-            this.checkedState = isChecked
+            // this.checkedEvent = null
+            // this.checkedState = isChecked
             this.stateEvent = null
             this.defaultState = 'idle'
-            this.registerEvent(this.radioButton)
+            
         }
 
         registerEvent(obj){
@@ -291,13 +262,13 @@ var MyToolkit = (function() {
                         this.checkedEvent(event);
                         if(this.checkedState == 'unchecked'){
                             this.checkedState = 'checked'
-                            this.circle.fill({color: Colors.blue})
-                            this.circle.stroke({color: Colors.blue})
+                            obj.fill({color: Colors.blue})
+                            obj.stroke({color: Colors.blue})
                         }
                         else {
                             this.checkedState = 'unchecked'
-                            this.circle.fill({color: Colors.white})
-                            this.circle.stroke({color: 'gray'})
+                            obj.fill({color: Colors.white})
+                            obj.stroke({color: 'gray'})
                         }
                 }
                 this.defaultState = 'up'
@@ -318,7 +289,7 @@ var MyToolkit = (function() {
 
 
         move(x, y) {
-            this.radioButton.move(x, y);
+            this.radioButtonGroup.move(x, y);
         }
         onclick(eventHandler) {
             this.clickEvent = eventHandler
@@ -555,16 +526,12 @@ var MyToolkit = (function() {
     // }
 
     var TextBox = class{
-        // TO DO:
-        // - consider caret with whitespace at the end of text. does not consider it (spaces)
-        // - caret should only be visible on hover focus
-
         // REQUIREMENTS:
         // Visually support a caret | that informs the user about the position of the cursor. 
         //      The caret should only be visually present when the widget has hover focus.
         // Expose a custom property to get the text entered by the user.
-        // Expose an event handler that notifies consuming code when the text has changed. [???]
-        // Expose an event handler that notifies consuming code when the widget state has changed. [done]
+        // Expose an event handler that notifies consuming code when the text has changed.
+        // Expose an event handler that notifies consuming code when the widget state has changed.
 
         //create textbox component
         constructor(draw){
@@ -573,8 +540,8 @@ var MyToolkit = (function() {
             this.height = 30;
             this.textbox = draw.group();
             this.rect = this.textbox.rect(200, 30).fill('white').stroke('black');
-            this.text = this.textbox.text('').move(5, 0);
-            this.caret = this.textbox.rect(2, 16).move(this.text.length()+6, 7);
+            this._text = this.textbox.text('').move(5, 0);
+            this.caret = this.textbox.rect(2, 16).move(this._text.length()+6, 7);
             this.runner = this.caret.animate().width(0)
             this.runner.loop(1000, 1, 0)
 
@@ -611,27 +578,29 @@ var MyToolkit = (function() {
             SVG.on(window, 'keyup', (event) => {
                 // text can go to the end and then stop
                 // console.log(event)
+                if(this.keyEvent != null)
+                    this.keyEvent(event)
+                
                 var key = event.key
                 if (key == 'Backspace'){
-                    var msg = this.text.text()
-                    this.text.text(msg.substring(0, msg.length-1))	
+                    var msg = this._text.text()
+                    this._text.text(msg.substring(0, msg.length-1))	
                 }
                 else if (event.altKey || event.ctrlKey) {
                     // do nothing
                     // otherwise, the letter will print
                 }
                 else if (event.key.length == 1){
-                    if (this.text.length() < 186) {
+                    if (this._text.length() < 186) {
                         if (event.shiftKey){
-                            this.text.text(this.text.text() + event.key.toUpperCase())
+                            this._text.text(this._text.text() + event.key.toUpperCase())
                         }
                         else {
-                            this.text.text(this.text.text() + event.key)
+                            this._text.text(this._text.text() + event.key)
                         }
                     }
-                    
                 }
-                this.caret.x(this.textbox.x()+this.text.length()+6)
+                this.caret.x(this.textbox.x()+this._text.length()+6)
             })
         }
         transition(){
@@ -641,7 +610,7 @@ var MyToolkit = (function() {
 
         update(){
             if(this.buttonText != null){
-                this.buttonText.text(this.text)
+                this.buttonText.text(this._text)
             }
         }
 
@@ -649,8 +618,7 @@ var MyToolkit = (function() {
         move(x, y) {
             this.textbox.move(x, y);
         }
-        textChanged(eventHandler) {
-            // doesn't work
+        onkeypress(eventHandler) {
             this.keyEvent = eventHandler
         }
         stateChanged(eventHandler) {
@@ -659,6 +627,9 @@ var MyToolkit = (function() {
         }
         src() {
             return this.textbox;
+        }
+        get text() {
+            return this._text.text()
         }
     }
 
@@ -699,6 +670,7 @@ var MyToolkit = (function() {
 
             // define widget states
             this.scrollEvent = null
+            this.scrollDirection = 'none'
             this.stateEvent = null
             this.defaultState = 'idle'
             this.registerEvent(this.outterRect);
@@ -723,17 +695,14 @@ var MyToolkit = (function() {
             })
             obj.mousemove((event) => {
                 if (this.defaultState == 'pressed'){
-                    // console.log(event)
+                    if(this.scrollEvent != null)
+                        this.scrollEvent(event)
+
                     var lowerBoundary = this.outterRect.y() + this._height - this._width
                     var lowerScrollThumbPosition = this.innerRect.y() + this._scrollHeight - 1
 
                     var upperBoundary = this.outterRect.y() + this._width
                     var upperScrollThumbPosition = this.innerRect.y() + 1
-
-                    // console.log('upperbound: ' + upperBoundary)
-                    // console.log('upper scroll bound: ' + upperScrollThumbPosition)
-                    // console.log('lowerbound: ' + lowerBoundary)
-                    // console.log('lower scroll bound: ' + lowerScrollThumbPosition)
 
                     var diff = event.clientY - this.currentY
                     if (lowerScrollThumbPosition >= lowerBoundary){
@@ -748,6 +717,13 @@ var MyToolkit = (function() {
                     }
                     else {
                         this.innerRect.dy(diff)
+                    }
+
+                    if (diff < 0) {
+                        this.scrollDirection = 'up'
+                    }
+                    else if (diff > 0) {
+                        this.scrollDirection = 'down'
                     }
                     this.currentY = event.clientY
 
@@ -777,18 +753,14 @@ var MyToolkit = (function() {
             }
         }
 
-        moveScrollThumb(){
-
-        }
-
 
         move(x, y) {
             this.progressBar.move(x, y);
         }
-        // textChanged(eventHandler) {
-        //     // doesn't work
-        //     this.keyEvent = eventHandler
-        // }
+        onscroll(eventHandler) {
+            this.scrollEvent = eventHandler
+            
+        }
         stateChanged(eventHandler) {
             this.stateEvent = eventHandler
         }
@@ -810,6 +782,12 @@ var MyToolkit = (function() {
         get increment() {
             return this._inc
         }
+        get direction() {
+            return this.scrollDirection
+        }
+        get thumbPosition() {
+            return [this.innerRect.x(), this.innerRect.y()]
+        }
         size(w, h) {
             this._width = w;
             this._height = h;
@@ -822,17 +800,11 @@ var MyToolkit = (function() {
     }
 
     var ProgressBar = class {
-        // TO DO:
-        // - implement 0-100 thing
-
         // REQUIREMENTS:
         // Expose a custom property to set the width of the progress bar.
         // Expose a custom property to set the increment value of the progress bar.
         // Expose a custom property to get the increment value of the progress bar.
         // Expose a custom method to increment the value of the progress bar. The method should support an arbitrary numerical value from 0-100.
-        //      if 0, progress bar should be empty... and so on
-        //      "as long as your code provides a way for calling code to change the value
-        //      (or progress) of the widget"
         // Expose an event handler that notifies consuming code when the progress bar has incremented.
         // Expose an event handler that notifies consuming code when the widget state has changed.
 
@@ -847,7 +819,7 @@ var MyToolkit = (function() {
             this.innerRect = this.progressBar.rect(this._inc, this._height).fill('green');
 
             // define widget states
-            this.incEvent = null
+            this.incrEvent = null
             this.stateEvent = null
             this.defaultState = 'idle'
             this.registerEvent(this.outterRect);
@@ -869,10 +841,6 @@ var MyToolkit = (function() {
                 this.transition()
             })
             obj.mouseup((event) => {
-                if(this.defaultState == 'pressed'){
-                    if(this.clickEvent != null)
-                        this.clickEvent(event)
-                }
                 this.defaultState = 'up'
                 this.transition()
             })
@@ -891,6 +859,8 @@ var MyToolkit = (function() {
             }
             if(this._inc != null){
                 this.innerRect.width(this._inc)
+                if(this.incrEvent != null)
+                    this.incrEvent('incremented')
             }
         }
 
@@ -898,10 +868,9 @@ var MyToolkit = (function() {
         move(x, y) {
             this.progressBar.move(x, y);
         }
-        // textChanged(eventHandler) {
-        //     // doesn't work
-        //     this.keyEvent = eventHandler
-        // }
+        onincrement(eventHandler){
+            this.incrEvent = eventHandler
+        }
         stateChanged(eventHandler) {
             this.stateEvent = eventHandler
         }
@@ -977,14 +946,14 @@ var MyToolkit = (function() {
                 if(this.defaultState == 'pressed'){
                     if(this.checkedEvent != null)
                         this.checkedEvent(event);
-                        if(this.checkedState == 'off'){
-                            this.checkedState = 'on'
-                            this.update()
-                        }
-                        else {
-                            this.checkedState = 'off'
-                            this.update()
-                        }
+                    if(this.checkedState == 'off'){
+                        this.checkedState = 'on'
+                        this.update()
+                    }
+                    else {
+                        this.checkedState = 'off'
+                        this.update()
+                    }
                 }
                 this.defaultState = 'up'
                 this.transition()
@@ -994,26 +963,6 @@ var MyToolkit = (function() {
         transition(){
             if(this.stateEvent != null)
                 this.stateEvent(this.defaultState)
-        }
-
-        handleEvent(e) {
-            switch(e.type) {
-                case "click":
-                    this.clickEvent(e);
-                break;
-                case "mouseover":
-                    this.mouseOverEvent(e);
-                break;
-                case "mouseout":
-                    this.mouseOutEvent(e);
-                break;
-                case "mousedown":
-                    this.mouseDownEvent(e);
-                break;
-                case "mouseup":
-                    this.mouseUpEvent(e);
-                break;
-            }
         }
 
         update(){
@@ -1039,7 +988,6 @@ var MyToolkit = (function() {
             this.clickEvent = eventHandler
         }
         stateChanged(eventHandler) {
-            // console.log(eventHandler)
             this.stateEvent = eventHandler
         }
         src() {
